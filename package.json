@@ -1,0 +1,28 @@
+{
+  "name": "disputeguard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI agent for PayPal disputes: reads evidence with Meta Muse Spark, recommends fight or settle, acts after human approval.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "gate1": "tsx spikes/gate-check/src/gate1-meta.ts",
+    "gate2": "tsx spikes/gate-check/src/gate2-paypal.ts",
+    "gate3": "tsx spikes/gate-check/src/gate3-webhook.ts",
+    "fixtures": "tsx spikes/gate-check/scripts/make-fixtures.ts",
+    "typecheck": "tsc -p ."
+  },
+  "author": "Joan Njeri",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^5.12.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
