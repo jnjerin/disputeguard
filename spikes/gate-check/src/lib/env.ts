@@ -11,13 +11,13 @@ const SANDBOX_HOST = "api-m.sandbox.paypal.com";
 
 const schemas = {
   meta: z.object({
-    MODEL_API_KEY: z.string().min(1, "fill in MODEL_API_KEY= in .env"),
+    MODEL_API_KEY: z.string({ error: "fill in MODEL_API_KEY= in .env" }).min(1, "fill in MODEL_API_KEY= in .env"),
     META_BASE_URL: z.string().url(),
     META_MODEL: z.string().default(""),
   }),
   paypal: z.object({
-    PAYPAL_CLIENT_ID: z.string().min(1, "fill in PAYPAL_CLIENT_ID= in .env"),
-    PAYPAL_CLIENT_SECRET: z.string().min(1, "fill in PAYPAL_CLIENT_SECRET= in .env"),
+    PAYPAL_CLIENT_ID: z.string({ error: "fill in PAYPAL_CLIENT_ID= in .env" }).min(1, "fill in PAYPAL_CLIENT_ID= in .env"),
+    PAYPAL_CLIENT_SECRET: z.string({ error: "fill in PAYPAL_CLIENT_SECRET= in .env" }).min(1, "fill in PAYPAL_CLIENT_SECRET= in .env"),
     PAYPAL_BASE_URL: z.string().url(),
   }),
   webhook: z.object({
