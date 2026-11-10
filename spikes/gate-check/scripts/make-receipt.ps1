@@ -1,4 +1,8 @@
-# Renders fixtures/receipt.png: a receipt-like image with text, using built-in System.Drawing.
+# PURPOSE
+# Renders fixtures/receipt.png, a fake shop receipt (invented sample data) that Gate 1 (check 1d)
+# sends to the model to test reading text from an image: merchant, total and date.
+# Uses Windows' built-in System.Drawing, so no image library needs to be installed.
+# Run: powershell -File spikes/gate-check/scripts/make-receipt.ps1
 Add-Type -AssemblyName System.Drawing
 $out = Join-Path $PSScriptRoot "..\fixtures\receipt.png"
 $bmp = New-Object System.Drawing.Bitmap 480, 520

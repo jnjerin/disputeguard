@@ -1,4 +1,15 @@
-// Loads .env from the repo root and validates it. Each gate asks only for the vars it needs.
+/**
+ * PURPOSE
+ * Loads settings from the repo-root .env file and checks them before any gate runs, so a missing
+ * key gives a clear "fill in X= in .env" message instead of a confusing HTTP error later.
+ *
+ * - Each gate asks only for the group it needs: loadEnv("meta"), loadEnv("paypal"), ...
+ * - Blank values count as missing.
+ * - SAFETY: loadEnv("paypal") exits if PAYPAL_BASE_URL is not the PayPal sandbox host. This repo
+ *   must never talk to live PayPal.
+ * - Values are validated with zod and never printed.
+ * - PATHS gives every script the same absolute folders (fixtures, logs) wherever it runs from.
+ */
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";

@@ -1,5 +1,16 @@
-// Writes fixtures/evidence.pdf: a one-page text PDF built by hand (no PDF library).
-// receipt.png is made separately by make-receipt.ps1 (Windows System.Drawing).
+/**
+ * PURPOSE
+ * Writes fixtures/evidence.pdf, a fake one-page "shipping confirmation" that Gate 1 (check 1e)
+ * sends to the model to test PDF reading. The content is invented sample data.
+ *
+ * HOW
+ * A PDF is just text objects plus a byte-offset table ("xref"), so for one page of text we build
+ * it by hand instead of adding a PDF library. Because the xref stores byte offsets, the file must
+ * never have its line endings changed (hence `*.pdf binary` in .gitattributes).
+ *
+ * receipt.png (check 1d) is made separately by make-receipt.ps1 using Windows' System.Drawing.
+ * Run: npm run fixtures
+ */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PATHS } from "../src/lib/env.js";

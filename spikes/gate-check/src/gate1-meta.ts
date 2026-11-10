@@ -1,8 +1,30 @@
-// Gate 1: Meta Model API (chat completions, OpenAI-compatible).
-// Docs: https://dev.meta.ai/docs/protocols/chat-completions, /tool-calling, /structured-output,
-// /file-handling, /pricing-rate-limits.
-// Usage: npm run gate1            (all checks)
-//        npm run gate1 -- 1c 1d   (only these checks, to save credits)
+/**
+ * PURPOSE
+ * Gate 1 of the gate-check spike: prove that Meta's Model API (the "AI brain" of DisputeGuard)
+ * can do everything the agent will need, using our key, from this machine:
+ *   1a  answer a plain chat message
+ *   1b  call a tool (function) with JSON arguments, take the result back, and answer
+ *   1c  return JSON that matches our schema exactly ({decision, confidence, reasons})
+ *   1d  read an image (a receipt) and extract merchant, amount and date
+ *   1e  read a PDF (shipping evidence)
+ *   1f  report latency, tokens and estimated cost for every call
+ *
+ * HOW IT TALKS TO META
+ * Meta's API is "OpenAI-compatible": we POST to {META_BASE_URL}/chat/completions with a Bearer
+ * key, and the request/response shapes match OpenAI's chat completions. We use plain fetch (no
+ * SDK) so we see the raw HTTP behaviour.
+ *
+ * COST CONTROL
+ * Credits are limited, so each check is ONE small call (two for 1b), reasoning effort is set to
+ * "minimal", and you can re-run only the checks you need.
+ *
+ * USAGE
+ *   npm run gate1            all checks
+ *   npm run gate1 -- 1c 1d   only these checks
+ *
+ * DOCS (read 2026-10-28): https://dev.meta.ai/docs/protocols/chat-completions, /tool-calling,
+ * /structured-output, /file-handling, /pricing-rate-limits, /models
+ */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -39,11 +61,17 @@ type Message = {
 type CallLog = { check: string; ms: number; usage: Usage; costUsd: number | null };
 type Result = { check: string; status: "PASS" | "FAIL" | "SKIP"; detail: string };
 
+// Every API call and every check result is collected here, printed at the end (1f) and saved
+// to logs/gate1-<timestamp>.json for writing GATES.md.
 const calls: CallLog[] = [];
 const results: Result[] = [];
 
 class HttpError extends Error {}
 
+/**
+ * Low-level HTTP call to the Meta API. Adds the Bearer key, measures latency, and throws with
+ * the real status + error body on failure (fail loudly: no retries, no fake success).
+ */
 async function metaFetch(path: string, init: RequestInit = {}): Promise<{ json: any; ms: number }> {
   const started = performance.now();
   const res = await fetch(`${env.META_BASE_URL}${path}`, {
@@ -56,6 +84,7 @@ async function metaFetch(path: string, init: RequestInit = {}): Promise<{ json: 
   return { json: JSON.parse(text), ms };
 }
 
+/** Estimated USD cost of one call: fresh input + cached input + output (reasoning counts as output). */
 function cost(model: string, u: Usage): number | null {
   const p = PRICING[model];
   if (!p) return null;
@@ -64,6 +93,7 @@ function cost(model: string, u: Usage): number | null {
   return (fresh * p.input + cached * p.cached + (u.completion_tokens ?? 0) * p.output) / 1e6;
 }
 
+/** One chat completion call. Records latency, token usage and cost under the given check name. */
 async function chat(check: string, model: string, body: Record<string, unknown>) {
   const { json, ms } = await metaFetch("/chat/completions", {
     method: "POST",
@@ -75,6 +105,7 @@ async function chat(check: string, model: string, body: Record<string, unknown>)
   return { message: choice?.message as Message, finish: choice?.finish_reason as string, raw: json };
 }
 
+/** Runs one check, prints PASS or FAIL with the real error, and records the result. */
 async function run(check: string, title: string, fn: () => Promise<string>) {
   if (only.length && !only.includes(check)) return;
   try {
@@ -121,6 +152,10 @@ await run("1a", "plain chat completion", async () => {
   return `reply="${text.slice(0, 80)}" finish=${finish}`;
 });
 
+// 1b. The real agent will look things up (deadlines, tracking) through tools. Round trip:
+//   call 1: we offer a tool -> the model answers with a tool_call (name + JSON arguments)
+//   we run a FAKE tool locally and append its result as a role:"tool" message
+//   call 2: the model reads the tool result and gives the final answer
 await run("1b", "tool calling round trip", async () => {
   const tools = [
     {
@@ -153,6 +188,9 @@ await run("1b", "tool calling round trip", async () => {
   return `tool=${call.function.name} args=${call.function.arguments} final="${text.slice(0, 120).replace(/\s+/g, " ")}"`;
 });
 
+// 1c. The agent's fight-or-settle decision must be machine-readable. We send a JSON Schema in
+// response_format (the server constrains the output) AND validate the reply with zod (never
+// trust model output without checking it).
 const Decision = z.object({
   decision: z.enum(["fight", "settle"]),
   confidence: z.number().min(0).max(1),
@@ -190,6 +228,8 @@ await run("1c", "structured output (zod-validated)", async () => {
   return JSON.stringify(parsed).slice(0, 200);
 });
 
+// 1d. Evidence often arrives as images (receipts, screenshots). The image is sent inline as a
+// base64 data URL in an "image_url" content part, and the extraction uses structured output too.
 const Receipt = z.object({ merchant: z.string(), amount: z.string(), date: z.string() });
 const receiptFormat = {
   type: "json_schema",
@@ -229,6 +269,9 @@ await run("1d", "image input (fixtures/receipt.png)", async () => {
   return JSON.stringify(r);
 });
 
+// 1e. PDFs (invoices, shipping proofs) are sent inline as a "file" content part with a
+// data:application/pdf;base64 URL, as the Meta file-handling docs describe. If this ever fails,
+// the fallback is to render PDF pages to images and use the 1d path.
 await run("1e", "PDF input (fixtures/evidence.pdf, inline file part)", async () => {
   const b64 = readFileSync(resolve(PATHS.fixtures, "evidence.pdf")).toString("base64");
   const { message } = await chat("1e", model, {
