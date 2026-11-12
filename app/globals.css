@@ -1,0 +1,15 @@
+/* PURPOSE: global styles. Tailwind v4 + AG Grid theme tweaks so the grid matches the app. */
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-brand-50: #eef2ff;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+}
+
+body {
+  background: #f6f7fb;
+  color: #0f172a;
+}

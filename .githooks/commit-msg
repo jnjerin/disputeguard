@@ -1,0 +1,3 @@
+#!/bin/sh
+# PURPOSE: blocks commit messages with Co-Authored-By or other AI attribution trailers.
+exec node scripts/check-secrets.mjs msg "$1"

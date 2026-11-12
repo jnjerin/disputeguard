@@ -8,21 +8,42 @@
     "node": ">=20.12"
   },
   "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start -p ${PORT:-3000}",
+    "typecheck": "tsc -p . --noEmit",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "check-secrets": "node scripts/check-secrets.mjs history",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "postinstall": "prisma generate",
     "gate1": "tsx spikes/gate-check/src/gate1-meta.ts",
     "gate2": "tsx spikes/gate-check/src/gate2-paypal.ts",
     "gate3": "tsx spikes/gate-check/src/gate3-webhook.ts",
-    "fixtures": "tsx spikes/gate-check/scripts/make-fixtures.ts",
-    "typecheck": "tsc -p ."
+    "fixtures": "tsx spikes/gate-check/scripts/make-fixtures.ts"
   },
   "author": "Joan Njeri",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "ag-grid-community": "^36.3.0",
+    "ag-grid-react": "^36.3.0",
     "fastify": "^5.12.7",
+    "lucide-react": "^1.72.0",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.32",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.3.5",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   }
 }

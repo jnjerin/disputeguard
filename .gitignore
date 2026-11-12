@@ -6,3 +6,9 @@ PROJECT-THOUGHTS.md
 ROADMAP.md
 SUBMISSION-PLAN.md
 REVIEWERS-PLAN.md
+.next/
+next-env.d.ts
+*.tsbuildinfo
+DEVPOST.md
+VIDEO-SCRIPT.md
+AGENTS.md

@@ -1,0 +1,114 @@
+// PURPOSE
+// Database schema for DisputeGuard (Postgres on Render).
+// - Dispute:      a PayPal dispute as last seen from the Disputes API (raw JSON kept for the UI).
+// - Evidence:     files the merchant uploads (receipts, tracking PDFs); small, stored as bytes.
+// - AgentRun:     one AI investigation: steps, verdict, tokens, cost, latency. Never acts on PayPal.
+// - AuditEvent:   every human-approved PayPal write (who, what, when, result). The money trail.
+// - WebhookEvent: every PayPal webhook received; the event id is the primary key, which is how
+//                 duplicates (PayPal retries) are ignored.
+// - EvalResult:   results of `npm run eval` for the Agent quality page.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Dispute {
+  id                   String    @id // PayPal dispute_id, e.g. PP-R-ABC-12345
+  status               String // OPEN, WAITING_FOR_SELLER_RESPONSE, UNDER_REVIEW, RESOLVED...
+  stage                String? // dispute_life_cycle_stage: INQUIRY, CHARGEBACK, PRE_ARBITRATION...
+  reason               String // MERCHANDISE_OR_SERVICE_NOT_RECEIVED, UNAUTHORISED, ...
+  amountValue          String?
+  amountCurrency       String?
+  sellerResponseDueAt  DateTime?
+  buyerResponseDueAt   DateTime?
+  transactionId        String?
+  buyerName            String?
+  outcome              String?
+  paypalCreatedAt      DateTime?
+  paypalUpdatedAt      DateTime?
+  raw                  Json // full GET /v1/customer/disputes/{id} body
+  syncedAt             DateTime  @default(now()) @updatedAt
+  evidence             Evidence[]
+  agentRuns            AgentRun[]
+  auditEvents          AuditEvent[]
+}
+
+model Evidence {
+  id        String   @id @default(cuid())
+  disputeId String
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@index([disputeId])
+}
+
+model AgentRun {
+  id                String   @id @default(cuid())
+  disputeId         String
+  dispute           Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  status            String // ok | error
+  model             String
+  decision          String? // fight | settle
+  confidence        Float?
+  injectionDetected Boolean  @default(false)
+  verdict           Json? // full zod-validated verdict
+  steps             Json // tool calls and results, for the "agent trace" view
+  inputTokens       Int      @default(0)
+  outputTokens      Int      @default(0)
+  costUsd           Float    @default(0)
+  latencyMs         Int      @default(0)
+  error             String?
+  createdAt         DateTime @default(now())
+
+  @@index([disputeId, createdAt])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  disputeId String?
+  dispute   Dispute? @relation(fields: [disputeId], references: [id], onDelete: SetNull)
+  action    String // send-message | provide-evidence | accept-claim | adjudicate | sync ...
+  actor     String // who clicked (single demo merchant for the MVP)
+  amount    String?
+  result    String // ok | error
+  detail    Json
+  createdAt DateTime @default(now())
+
+  @@index([disputeId, createdAt])
+}
+
+model WebhookEvent {
+  id           String   @id // PayPal event id (de-duplication key)
+  eventType    String
+  resourceId   String?
+  verified     Boolean
+  verifyStatus String // SUCCESS | FAILURE | ERROR: ...
+  raw          Json
+  receivedAt   DateTime @default(now())
+}
+
+model EvalResult {
+  id          String   @id @default(cuid())
+  runId       String // groups the cases of one `npm run eval`
+  caseId      String
+  expected    String // fight | settle
+  actual      String? // fight | settle (null on error)
+  expectInjection Boolean
+  gotInjection    Boolean
+  correct     Boolean
+  costUsd     Float
+  latencyMs   Int
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([runId])
+}

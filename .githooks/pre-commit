@@ -1,0 +1,3 @@
+#!/bin/sh
+# PURPOSE: blocks commits that contain .env files, real .env values or the live PayPal host.
+exec node scripts/check-secrets.mjs staged
