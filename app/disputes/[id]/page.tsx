@@ -182,7 +182,7 @@ export default async function DisputePage({ params }: { params: Promise<{ id: st
             </ActionForm>
           </Card>
 
-          <ApprovalPanel
+          <ApprovalPanel key={run?.id ?? "none"}
             draft={verdict?.draft_message ?? ""}
             evidence={d.evidence.map((e) => ({ id: e.id, filename: e.filename }))}
             allowed={allowed}
