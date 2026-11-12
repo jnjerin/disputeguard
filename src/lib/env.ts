@@ -44,9 +44,12 @@ const cache = new Map<keyof Schemas, unknown>();
 export function env<K extends keyof Schemas>(group: K): z.infer<Schemas[K]> {
   if (cache.has(group)) return cache.get(group) as z.infer<Schemas[K]>;
 
-  // Treat blank values as missing so defaults and "fill in" messages apply.
+  // Trim every value (a pasted trailing space or newline in a dashboard breaks model ids and
+  // keys invisibly) and treat blank values as missing so defaults and "fill in" messages apply.
   const raw = Object.fromEntries(
-    Object.entries(process.env).filter(([, v]) => v !== undefined && v.trim() !== ""),
+    Object.entries(process.env)
+      .map(([k, v]) => [k, v?.trim()] as const)
+      .filter(([, v]) => v !== undefined && v !== ""),
   );
   const parsed = schemas[group].safeParse(raw);
   if (!parsed.success) {
