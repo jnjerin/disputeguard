@@ -1,4 +1,4 @@
-# DisputeGuard (working name)
+# DisputeGuard
 
 An AI agent for PayPal disputes. It receives a dispute webhook, reads the evidence with Meta's
 Muse Spark model, recommends fight or settle, drafts a response, and acts through the PayPal
