@@ -14,7 +14,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ArrowLeft, Bot, FileText, FlaskConical, ImageIcon, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
 import type { AgentStep } from "@/agent/core";
 import type { Verdict } from "@/agent/verdict";
-import { Countdown, SubmitButton, VerdictBadge } from "@/components/ui";
+import { Countdown, FilePicker, SubmitButton, VerdictBadge } from "@/components/ui";
 import { db } from "@/lib/db";
 import { allowedActions, disputeMessages } from "@/lib/disputes";
 import { money, reasonLabel, statusLabel } from "@/lib/format";
@@ -177,7 +177,7 @@ export default async function DisputePage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
             <ActionForm action={A.uploadEvidence.bind(null, d.id)} className="space-y-2">
-              <input type="file" name="files" multiple accept="application/pdf,image/png,image/jpeg,image/gif" className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm" />
+              <FilePicker name="files" accept="application/pdf,image/png,image/jpeg,image/gif" />
               <SubmitButton className="border border-slate-300 bg-white text-slate-800 hover:bg-slate-50">Upload</SubmitButton>
             </ActionForm>
           </Card>

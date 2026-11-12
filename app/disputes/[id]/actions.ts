@@ -90,7 +90,12 @@ export async function refresh(disputeId: string, _prev: ActionState): Promise<Ac
 }
 
 export async function uploadEvidence(disputeId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
-  const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  // Duck-typed on purpose: in the server runtime an uploaded file is not always `instanceof` the
+  // global File class (it can come from a different realm), so check what it can do instead.
+  const files = form
+    .getAll("files")
+    .filter((f): f is File => typeof f === "object" && f !== null && typeof (f as Blob).arrayBuffer === "function" && (f as Blob).size > 0);
+  console.log(`[uploadEvidence] ${disputeId}:`, form.getAll("files").map((f) => (typeof f === "string" ? `string(${f.length})` : `${f.constructor?.name} name=${JSON.stringify((f as File).name)} size=${f.size} type=${f.type}`)));
   if (!files.length) return { ok: false, message: "Choose at least one file" };
   for (const f of files) {
     if (!ALLOWED_TYPES.includes(f.type)) return { ok: false, message: `${f.name}: only PDF, PNG, JPEG or GIF` };

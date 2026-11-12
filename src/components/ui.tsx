@@ -5,6 +5,8 @@
  * - Countdown: a live-ticking deadline badge coloured by urgency (the "deadline radar").
  * - VerdictBadge: FIGHT / SETTLE pill with a confidence bar.
  * - SubmitButton: a form button that shows a spinner while its server action runs.
+ * - FilePicker: an obvious "Choose file" button for a file input that shows what was picked
+ *   (the browser's default control was easy to miss).
  */
 import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -57,5 +59,25 @@ export function SubmitButton({ children, className = "", disabled = false }: { c
       {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
       {children}
     </button>
+  );
+}
+
+export function FilePicker({ name, accept }: { name: string; accept: string }) {
+  const [picked, setPicked] = useState<string>("");
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <label className="cursor-pointer rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+        Choose file…
+        <input
+          type="file"
+          name={name}
+          multiple
+          accept={accept}
+          className="sr-only"
+          onChange={(e) => setPicked(Array.from(e.target.files ?? []).map((f) => f.name).join(", "))}
+        />
+      </label>
+      <span className="text-sm text-slate-600">{picked || "No file chosen"}</span>
+    </div>
   );
 }
