@@ -77,7 +77,8 @@ export async function syncAllDisputes(): Promise<number> {
  */
 export function allowedActions(raw: unknown): Set<string> {
   const links = (raw as PayPalDispute | null)?.links ?? [];
-  return new Set(links.map((l) => l.rel));
+  // PayPal's docs show both "send-message" and "send_message" styles; normalise to underscores.
+  return new Set(links.map((l) => l.rel.toLowerCase().replace(/-/g, "_")));
 }
 
 /** Messages posted on the dispute (buyer and seller), oldest first. Buyer text is UNTRUSTED. */

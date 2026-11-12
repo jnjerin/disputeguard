@@ -38,7 +38,8 @@ function secretValues() {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
     if (!m) continue;
     const key = m[1];
-    let value = m[2].replace(/\s+#.*$/, "").trim().replace(/^["']|["']$/g, "");
+    // Strip inline comments ("KEY=   # note" means an empty value, as dotenv reads it).
+    let value = m[2].replace(/(^|\s)#.*$/, "").trim().replace(/^["']|["']$/g, "");
     if (PUBLIC_KEYS.has(key) || value.length < 8) continue;
     out.push({ key, value });
     // Also catch the password part of a database URL on its own.

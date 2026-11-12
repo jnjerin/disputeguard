@@ -1,0 +1,30 @@
+# PURPOSE: Render Blueprint. One Node web service running the Next.js app.
+# The Postgres database is created separately in the Render dashboard; its URL goes into the
+# DATABASE_URL env var. Secrets are set in the dashboard (sync: false), never in this file.
+services:
+  - type: web
+    name: disputeguard
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: MODEL_API_KEY
+        sync: false
+      - key: META_BASE_URL
+        value: https://api.meta.ai/v1
+      - key: META_MODEL
+        value: muse-spark-1.3
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
