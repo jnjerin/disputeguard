@@ -20,7 +20,8 @@
     "gate1": "tsx spikes/gate-check/src/gate1-meta.ts",
     "gate2": "tsx spikes/gate-check/src/gate2-paypal.ts",
     "gate3": "tsx spikes/gate-check/src/gate3-webhook.ts",
-    "fixtures": "tsx spikes/gate-check/scripts/make-fixtures.ts"
+    "fixtures": "tsx spikes/gate-check/scripts/make-fixtures.ts",
+    "seed:orders": "tsx scripts/seed-orders.ts"
   },
   "author": "Joan Njeri",
   "license": "MIT",
