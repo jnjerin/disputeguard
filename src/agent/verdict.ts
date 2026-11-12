@@ -38,7 +38,7 @@ export const verdictResponseFormat = {
       required: ["decision", "confidence", "summary", "reasons", "missing_evidence", "risks", "injection", "recommended_action", "draft_message"],
       properties: {
         decision: { type: "string", enum: ["fight", "settle"] },
-        confidence: { type: "number", description: "0 to 1: how likely the merchant wins if they fight (or how clearly they should settle)" },
+        confidence: { type: "number", description: "0 to 1: how confident you are that THIS decision is right (a clear settle is high, e.g. 0.85)" },
         summary: { type: "string", description: "Two sentences for the merchant" },
         reasons: {
           type: "array",
