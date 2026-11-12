@@ -41,6 +41,17 @@ async function create() {
   for (const item of ITEMS) {
     const o = await paypal<Order>("POST", "/v2/checkout/orders", {
       intent: "CAPTURE",
+      // Without return/cancel URLs the sandbox checkout page spins forever after "Review Order"
+      // (the payment IS approved, PayPal just has nowhere to send the buyer back to).
+      payment_source: {
+        paypal: {
+          experience_context: {
+            user_action: "PAY_NOW",
+            return_url: "https://example.com/disputeguard/approved",
+            cancel_url: "https://example.com/disputeguard/cancelled",
+          },
+        },
+      },
       purchase_units: [{ description: item.description, amount: { currency_code: "USD", value: item.value } }],
     });
     const approve = o.links.find((l) => l.rel === "approve" || l.rel === "payer-action");
