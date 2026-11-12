@@ -88,6 +88,14 @@ export async function chat(body: {
   });
   const ms = Math.round(performance.now() - started);
   const text = await res.text();
+  // Meta serves the model list by request origin: from some hosting regions the key is valid but
+  // sees no models at all (GET /v1/models returns []), so every call fails with model_not_found.
+  if (res.status === 404 && text.includes("model_not_found")) {
+    throw new Error(
+      `Muse Spark (${e.META_MODEL}) is not available from this server's region (Meta returned model_not_found). ` +
+        "Run the analysis from a supported location; see /api/health?meta=1.",
+    );
+  }
   if (!res.ok) throw new Error(`Meta API HTTP ${res.status}: ${text.slice(0, 600)}`);
   const json = JSON.parse(text);
   const choice = json.choices?.[0];
